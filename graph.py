@@ -53,7 +53,7 @@ def draw_axes(surface, xmin, xmax, ymin, ymax):
     e1, e2 = math2pygame(xmax, 0), math2pygame(0, ymax)
     pygame.draw.line(surface, (0, 100, 0), s1, e1, 1)
     pygame.draw.line(surface, (0, 100, 0), s2, e2, 1)
-    pygame.draw.line(surface, (0, 255, 0), math2pygame(xmin, ymin), math2pygame(xmax, ymax), 1)
+    # pygame.draw.line(surface, (0, 255, 0), math2pygame(xmin, ymin), math2pygame(xmax, ymax), 1)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -126,6 +126,10 @@ def main():
 
     for x, y in graphical_plot(args.function, args.start, args.stop, per_xpixel):
         Point(x, y, 255, points)
+
+    for x, y in graphical_plot(lambda x: x, args.start, args.stop, per_xpixel):
+        Point(x, y, 125, points)
+
 
     lines = graphical_analysis(args.seed, args.function, args.iters)
     
