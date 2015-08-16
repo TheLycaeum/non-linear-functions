@@ -1,3 +1,17 @@
+# Copyright 2015 Noufal Ibrahim <noufal@nibrahim.net.in>
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import argparse
 import math
 import sys
@@ -90,6 +104,7 @@ def parse_args():
     if args.function in globals():
         args.function = globals()[args.function]
     else:
+        print "Here lambda x : {}".format(args.function)
         args.function = eval("lambda x : {}".format(args.function)) 
     return args
 
@@ -98,10 +113,12 @@ def linear_plot(function, start, iters = False):
     if iters:
         for i in range(iters):
             start = function(start)
+            print start
             yield start
     else:
         while True:
             start = function(start)
+            print start
             yield start
     
 def main():
