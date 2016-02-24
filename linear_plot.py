@@ -104,7 +104,6 @@ def parse_args():
     if args.function in globals():
         args.function = globals()[args.function]
     else:
-        print "Here lambda x : {}".format(args.function)
         args.function = eval("lambda x : {}".format(args.function)) 
     return args
 
@@ -113,12 +112,10 @@ def linear_plot(function, start, iters = False):
     if iters:
         for i in range(iters):
             start = function(start)
-            print start
             yield start
     else:
         while True:
             start = function(start)
-            print start
             yield start
     
 def main():
