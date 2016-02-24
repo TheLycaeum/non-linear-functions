@@ -36,7 +36,7 @@ class Point(pygame.sprite.Sprite):
         super(Point,self).__init__(groups)
         self.image = pygame.Surface((1,1))
         pygame.draw.circle(self.image, 
-                           (colour, colour, colour),
+                           colour,
                            (1,1),
                            1,
                            1)
@@ -125,10 +125,10 @@ def main():
 
 
     for x, y in graphical_plot(args.function, args.start, args.stop, per_xpixel):
-        Point(x, y, 255, points)
+        Point(x, y, (255,255,0), points)
 
     for x, y in graphical_plot(lambda x: x, args.start, args.stop, per_xpixel):
-        Point(x, y, 125, points)
+        Point(x, y, (125,125,125), points)
 
 
     lines = graphical_analysis(args.seed, args.function, args.iters)
