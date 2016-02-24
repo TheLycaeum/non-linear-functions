@@ -30,6 +30,24 @@ def math2pygame(x, y):
     gy = SDL_YMAX/2 - scaley*y
     return gx, gy
 
+class Panel(pygame.sprite.Sprite):
+    def __init__(self, val, groups):
+        super(Panel, self).__init__(groups)
+        self.font = pygame.font.Font("jGara2.ttf", 20)
+        self.image = pygame.Surface((100,25)).convert_alpha()
+        self.image.fill((0,10,0))
+        self.rect = self.image.get_rect()
+        self.rect.bottomright = (SDL_XMAX, SDL_YMAX)
+        self.val = val
+        info = self.font.render(val, True,(20,200,20))
+        self.image.fill((0,10,0,255))
+        self.image.blit(info,(0,0))
+
+    def update(self):
+        info = self.font.render(self.val, True,(20,200,20))
+        self.image.fill((0,10,0,255))
+        self.image.blit(info,(0,0))
+
 
 class Point(pygame.sprite.Sprite):
     def __init__(self, x, y, colour, groups):
@@ -117,11 +135,13 @@ def main():
 
 
     screen = pygame.display.set_mode((SDL_XMAX, SDL_YMAX), DOUBLEBUF)
+    pygame.font.init()
     screen.fill((0,10,0))
     empty = pygame.Surface((SDL_XMAX, SDL_YMAX))
     draw_axes(screen, XMIN, XMAX, YMIN, YMAX)
     points = pygame.sprite.Group()
     clock = pygame.time.Clock() 
+    panel = Panel("", points)
 
 
     for x, y in graphical_plot(args.function, args.start, args.stop, per_xpixel):
@@ -154,8 +174,9 @@ def main():
                 pass
             except TypeError:
                 pass
-            # except OverflowError:
-            #     pass
+            except OverflowError:
+                print "Overflow"
+                panel.val = "Overflow"
 
             col = (col + 50)%255
 
