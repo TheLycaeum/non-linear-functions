@@ -1,27 +1,9 @@
-# Copyright 2015 Noufal Ibrahim <noufal@nibrahim.net.in>
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import argparse
-import math
 import sys
 from math import *
 
-
 import pygame
 from pygame.locals import DOUBLEBUF, K_ESCAPE, KEYDOWN, QUIT
-
 
 
 def math2pygame(x, y):
@@ -29,10 +11,27 @@ def math2pygame(x, y):
     scaley = SDL_YMAX/float(YMAX - YMIN)
     minx = scalex*XMIN
     miny = scaley*YMAX
+
+    # print "Point : ",x, y
+    # print "Mins : ", minx, miny
+    # print "Scale : ", scalex, scaley
+    # print "Scaled points ", scalex*x, scaley*y
+    # print "Mins ", minx, miny
+
+
     gx = scalex*x - minx
     gy = miny - scaley*y
+    # print "Adjusted scaled points ", gx, gy
+    # print "---"*20
     return gx, gy
 
+
+def draw_axes(surface, xmin, xmax, ymin, ymax):
+    s1, s2 = math2pygame(xmin, 0), math2pygame(0, ymin)
+    e1, e2 = math2pygame(xmax, 0), math2pygame(0, ymax)
+    pygame.draw.line(surface, (0, 100, 0), s1, e1, 1)
+    pygame.draw.line(surface, (0, 100, 0), s2, e2, 1)
+    # pygame.draw.line(surface, (0, 255, 0), math2pygame(xmin, ymin), math2pygame(xmax, ymax), 1)
 
 class Panel(pygame.sprite.Sprite):
     def __init__(self, val, groups):
@@ -63,19 +62,14 @@ class Point(pygame.sprite.Sprite):
                            1,
                            1)
         self.rect = self.image.get_rect()
-        self.rect.center = math2pygame(x, y)
+        u,v = math2pygame(x, y)
+        self.rect.center = (u,v)
         
         # print "{:.04},{:.04} :: {:.04},{:.04}".format(x,y, *math2pygame(x, y))
         self.c = colour
     def update(self):
         pass
 
-def draw_axes(surface, xmin, xmax, ymin, ymax):
-    s1, s2 = math2pygame(xmin, 0), math2pygame(0, ymin)
-    e1, e2 = math2pygame(xmax, 0), math2pygame(0, ymax)
-    pygame.draw.line(surface, (0, 100, 0), s1, e1, 1)
-    pygame.draw.line(surface, (0, 100, 0), s2, e2, 1)
-    # pygame.draw.line(surface, (0, 255, 0), math2pygame(xmin, ymin), math2pygame(xmax, ymax), 1)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -87,10 +81,8 @@ def parse_args():
                         help = "Start plotting from")
     parser.add_argument("--stop", dest = "stop", action = "store", type = float, 
                         help = "Stop plotting at")
-    parser.add_argument("--seed", dest = "seed", action = "store", type = float,
+    parser.add_argument("--seed", dest = "seed", action = "store", type = str,
                         help = "Point whose orbit to plot")
-    parser.add_argument("--iters", dest = "iters", action = "store", type = int, default = 0,
-                        help = "Number of iterations to plot")
 
     args = parser.parse_args()
     args.winsize = [int(x) for x in args.winsize.split("x")]
@@ -99,28 +91,7 @@ def parse_args():
     args.function = eval("lambda x : {}".format(args.function)) 
     return args
 
-def graphical_plot(function, start, end, increment):
-    """Generates y values for given function starting from `start` and
-    ending at `end`. x values are incremented by increment.""" 
-    while start < end:
-        yield start, function(start)
-        start += increment
-    
 
-def graphical_analysis(seed, function, iterations):
-    for i in range(iterations):
-        t = function(seed)
-        start = seed, t
-        end = t, t
-        seed = t
-        yield start, end
-        
-        u = function(seed)
-        start = t, t
-        end = t, u
-        yield start, end
-
-    
 def main():
     global SDL_XMAX
     global SDL_YMAX
@@ -134,55 +105,37 @@ def main():
     XMIN, YMIN = args.min
     XMAX, YMAX = args.max
 
-    per_xpixel = float(XMAX - XMIN)/SDL_XMAX
-    per_ypixel = float(YMAX - YMIN)/SDL_YMAX
+    # math2pygame(-2,0)
+    # math2pygame(0,0)
+    # print "{} - {}".format((XMIN, YMIN), math2pygame(XMIN, YMIN))
+    # print ""
+    # print "{} - {}".format((XMAX, YMAX), math2pygame(XMAX, YMAX))
+    # assert math2pygame(XMIN, YMIN) == 0,SDL_YMAX
+    # sys.exit()
 
-
+    
     screen = pygame.display.set_mode((SDL_XMAX, SDL_YMAX), DOUBLEBUF)
     pygame.font.init()
     screen.fill((0,10,0))
     empty = pygame.Surface((SDL_XMAX, SDL_YMAX))
-    draw_axes(screen, XMIN, XMAX, YMIN, YMAX)
     points = pygame.sprite.Group()
     clock = pygame.time.Clock() 
     panel = Panel("", points)
-
-
-    for x, y in graphical_plot(args.function, args.start, args.stop, per_xpixel/4):
-        Point(x, y, (0,255,255), points)
-
-    for x, y in graphical_plot(lambda x: x, args.start, args.stop, per_xpixel/4):
-        Point(x, y, (125,125,125), points)
-
-
-    lines = graphical_analysis(args.seed, args.function, args.iters)
     
-    col = 20
+    draw_axes(screen, XMIN, XMAX, YMIN, YMAX)
+    overflow = False
+    current = complex(args.seed)
     while True:
-        clock.tick(30)
-
-        if args.iters:
+        if not overflow:
+            current = args.function(current)
+            x,y = current.real, current.imag
             try:
-                start,stop = next(lines)
-                if start < stop:
-                    start, stop = stop, start
-                pygame.draw.line(screen, (100, 0, col), math2pygame(*start), math2pygame(*stop), 2)
-                print stop[1]
-                start,stop = next(lines)
-                if start < stop:
-                    start, stop = stop, start
-
-                pygame.draw.line(screen, (100, 0, col), math2pygame(*start), math2pygame(*stop), 2)
-
-            except StopIteration:
-                pass
+                Point(x, y, (0,255,0), points)
+                print x,y
             except TypeError:
-                pass
-            except OverflowError:
                 print "Overflow"
                 panel.val = "Overflow"
-
-            col = (col + 50)%255
+                overflow = True
 
 
         for event in pygame.event.get():
@@ -195,9 +148,8 @@ def main():
         points.draw(screen)
         pygame.display.flip()
 
-
+        
 
 
 if __name__ == '__main__':
     main()
-
